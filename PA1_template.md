@@ -2,13 +2,15 @@
 
 ## Loading and preprocessing the data
 
-```{r load data}
+
+```r
 unzip(zipfile = "activity.zip")
 data <- read.csv("activity.csv")
 ```
 
 ## What is mean total number of steps taken per day?
-```{r mean steps per day}
+
+```r
 library(ggplot2)
 
 ## totalPerDay <- tapply(data$steps, data$date, FUN=sum, na.rm=TRUE)
@@ -18,17 +20,32 @@ colnames(aggrData) <- c("Date","steps")
 
 hist(aggrData$steps, main = paste("Histogram of the total number of steps taken each day"),
      xlab = "total number of steps taken each day")
+```
 
+![plot of chunk mean steps per day](figure/mean steps per day.png) 
+
+```r
 ## mean
 mean(aggrData$steps, na.rm = TRUE)
+```
 
+```
+## [1] 9354
+```
+
+```r
 ## median
 median(aggrData$steps,na.rm = TRUE)
 ```
 
+```
+## [1] 10395
+```
+
 ## What is the average daily activity pattern?
 Make a time series plot of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
-```{r daily activity pattern}
+
+```r
 averages <- aggregate(x = list(steps = data$steps),
                       by = list(interval = data$interval), 
                       FUN = mean, na.rm = TRUE)
@@ -36,30 +53,50 @@ averages <- aggregate(x = list(steps = data$steps),
 ggplot(data = averages, aes(x = interval, y = steps)) +
         geom_line() + xlab("5-minute interval") + 
         ylab("average number of steps taken")
-
 ```
 
+![plot of chunk daily activity pattern](figure/daily activity pattern.png) 
+
 Which 5-minute interval, the 5-minute interval contains the maximum number of steps?
-```{r}
+
+```r
 maxSteps <- max(averages$steps)
 
 averages[averages$steps==maxSteps,]
 ```
 
+```
+##     interval steps
+## 104      835 206.2
+```
+
 
 ## Imputing missing values
 1. Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs)
-```{r missing values}
 
+```r
 nrow(data[is.na(data$steps),])
-table(is.na(data$steps))
+```
 
+```
+## [1] 2304
+```
+
+```r
+table(is.na(data$steps))
+```
+
+```
+## 
+## FALSE  TRUE 
+## 15264  2304
 ```
 
 
 2. Use the mean steps for that 5-minute interval to fill in missing value
 3. Create a new dataset that is equal to the original dataset but with the missing data filled in.
-```{r fill missing value}
+
+```r
 ## mean steps for each interval
 meanStep <- aggregate(x = list(steps = data$steps),
                       by = list(interval = data$interval), 
@@ -78,26 +115,64 @@ filled.data <- data
 filled.data$steps <- mapply(fill.value, filled.data$steps, filled.data$interval)
 
 summary(data)
-summary(filled.data)
+```
 
+```
+##      steps               date          interval   
+##  Min.   :  0.0   2012-10-01:  288   Min.   :   0  
+##  1st Qu.:  0.0   2012-10-02:  288   1st Qu.: 589  
+##  Median :  0.0   2012-10-03:  288   Median :1178  
+##  Mean   : 37.4   2012-10-04:  288   Mean   :1178  
+##  3rd Qu.: 12.0   2012-10-05:  288   3rd Qu.:1766  
+##  Max.   :806.0   2012-10-06:  288   Max.   :2355  
+##  NA's   :2304    (Other)   :15840
+```
+
+```r
+summary(filled.data)
+```
+
+```
+##      steps               date          interval   
+##  Min.   :  0.0   2012-10-01:  288   Min.   :   0  
+##  1st Qu.:  0.0   2012-10-02:  288   1st Qu.: 589  
+##  Median :  0.0   2012-10-03:  288   Median :1178  
+##  Mean   : 37.4   2012-10-04:  288   Mean   :1178  
+##  3rd Qu.: 27.0   2012-10-05:  288   3rd Qu.:1766  
+##  Max.   :806.0   2012-10-06:  288   Max.   :2355  
+##                  (Other)   :15840
 ```
 
 
 4. Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day.
-```{r}
+
+```r
 aggrData_Filled <- aggregate(filled.data$steps, by=list(filled.data$date), FUN=sum, na.rm=TRUE)
 colnames(aggrData_Filled) <- c("Date","steps")
 ## qplot(x=Date, data=aggrData_Filled, geom="histogram")
 hist(aggrData_Filled$steps,
      main = paste("Histogram of the total number of steps taken each day (With missing data filled in)"),
      xlab = "total number of steps taken each day")
+```
 
+![plot of chunk unnamed-chunk-2](figure/unnamed-chunk-2.png) 
+
+```r
 ## mean
 mean(aggrData_Filled$steps, na.rm = TRUE)
+```
 
+```
+## [1] 10766
+```
+
+```r
 ## median
 median(aggrData_Filled$steps,na.rm = TRUE)
+```
 
+```
+## [1] 10766
 ```
 
 The mean and median total number of steps values are higher than before.
@@ -111,7 +186,8 @@ these 0 values are removed from the histogram of total number of steps taken eac
 Use the dataset with the filled-in missing values for this part
 
 1. Create a new factor variable in the dataset with two levels – “weekday” and “weekend”
-```{r}
+
+```r
 isWeekday <- function(date){
         day <- weekdays(date)
         if (day %in% c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")) 
@@ -124,14 +200,15 @@ isWeekday <- function(date){
 
 filled.data$date <- as.Date(filled.data$date)
 filled.data$day <- sapply(filled.data$date, FUN = isWeekday)
-
 ```
 
 2. Make a panel plot containing a time series plot 
-```{r}
+
+```r
 averages <- aggregate(steps ~ interval + day, data = filled.data, mean)
 ggplot(averages, aes(interval, steps)) +
         geom_line() + facet_grid(day ~ .) + 
         xlab("5-minute interval") + ylab("Number of steps")
-
 ```
+
+![plot of chunk unnamed-chunk-4](figure/unnamed-chunk-4.png) 
